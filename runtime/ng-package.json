@@ -1,0 +1,13 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "assets": ["styles/**/*"],
+  "lib": {
+    "entryFile": "../gp-data-point-indoor-map-widget/public-api.ts",
+    "umdModuleIds": {
+      "@c8y/ngx-components": "@c8y/ngx-components"
+    },
+    "flatModuleFile": "custom-widget"
+  },
+  "whitelistedNonPeerDependencies": ["."],
+  "dest": "dist/widget-library"
+}

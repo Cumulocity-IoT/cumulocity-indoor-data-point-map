@@ -1,0 +1,17 @@
+{
+  "name": "Indoor Data Point Map",
+  "contextPath": "indoor-data-point-map-widget",
+  "key": "indoor-data-point-map-widget-application-key",
+  "contentSecurityPolicy": "default-src 'self'",
+  "icon": {
+    "class": "fa fa-map"
+  },
+  "manifest": {
+    "noAppSwitcher": true,
+    "requiredPlatformVersion": ">=1011.0.0",
+    "version": "1.0.0",
+    "author": "Christian Guether - Software AG, Global Presales",
+    "description": "Display an indoor floor plan and its markers configured with the smart map settings widget. Display configured measurements and define thresholds.",
+    "license": "Apache 2.0"
+  }
+}
