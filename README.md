@@ -9,7 +9,7 @@ The Indoor Data Point Map Widget displays a floor plan and a set of devices, whi
 3. Upload floor plan
 4. Add devices for the floor
 
-<image>
+![smart_map_settings](https://user-images.githubusercontent.com/57527184/155541608-245d8013-2f24-4edf-8330-3bf1615ddb35.png)
 
 Configure the The Indoor Data Point Map Widget once you have created the smart map configuration.
 
@@ -20,11 +20,11 @@ Configure the The Indoor Data Point Map Widget once you have created the smart m
 
 An example:
 
-<image>
+![indoor_data_point_map_configuration](https://user-images.githubusercontent.com/57527184/155541644-8dca435f-f771-4e96-8513-7617b52d2e9d.png)
 
 **Preview**:
 
-<image>
+![indoor_data_point_map](https://user-images.githubusercontent.com/57527184/155541688-2f43f4b7-8a4e-4fa8-b687-3c9c76343e67.png)
 
 ### Installation - for the dashboards using Runtime Widget Loader
 1. Download the latest `indoor-data-point-map-widget-{version}.zip` file from the Releases section.
