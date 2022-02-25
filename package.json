@@ -9,7 +9,7 @@
     "deploy": "c8ycli deploy",
     "runtime": "gulp --gulpfile ./runtime/gulpfile.js",
     "prettier": "prettier --write",
-    "prettier:all": "prettier --write \"**/*.@(js|ts|html|md|css|less|json|yaml)\" \"!**/*.min.*\""
+    "prettier:all": "cd ./gp-data-point-indoor-map-widget && prettier --write \"**/*.@(js|ts|html|md|css|less|json|yaml)\" \"!**/*.min.*\""
   },
   "keywords": [],
   "author": "",

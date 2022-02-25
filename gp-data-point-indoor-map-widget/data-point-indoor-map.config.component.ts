@@ -18,7 +18,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
 import { IManagedObject } from '@c8y/client';
-import { AlertService} from '@c8y/ngx-components';
+import { AlertService } from '@c8y/ngx-components';
 import { DataPointIndoorMapConfigService } from './data-point-indoor-map.config.service';
 import { AddThresholdModalComponent } from './add-threshold-modal/add-threshold-modal.component';
 import { Threshold, WidgetConfiguration } from './data-point-indoor-map.model';
