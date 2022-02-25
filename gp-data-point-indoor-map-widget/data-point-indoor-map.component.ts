@@ -66,6 +66,8 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
 
   private readonly KEY_MAP_MARKER_POPUP_INSTANCE = 'mapMarkerPopupInstance';
 
+  private readonly DEFAULT_ZOOM_LEVEL = 20;
+
   private currentFloorLevel = 0;
 
   private markerManagedObjectsForFloorLevel: { [deviceId: string]: IManagedObject }[] = [];
@@ -242,10 +244,14 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
     const imgBlobURL = URL.createObjectURL(
       this.mapConfiguration.levels[this.currentFloorLevel].blob
     );
+    const zoomLevel =
+      this.config.mapSettings && this.config.mapSettings.zoomLevel
+        ? this.config.mapSettings.zoomLevel
+        : this.DEFAULT_ZOOM_LEVEL;
 
     this.map = L.map(this.mapReference.nativeElement, {
       center: [0, 0],
-      zoom: 20.25,
+      zoom: zoomLevel,
       zoomDelta: 0.25,
       zoomSnap: 0,
       maxBounds: bounds

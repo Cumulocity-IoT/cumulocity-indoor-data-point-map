@@ -33,6 +33,8 @@ import { ManagedDatapointsPopupModalComponent } from './managed-datapoints-popup
 export class DataPointIndoorMapConfigComponent implements OnInit {
   @Input() config: WidgetConfiguration;
 
+  private readonly DEFAULT_ZOOM_LEVEL = 20;
+
   mapConfigurations: IManagedObject[];
 
   dataPointSeries: string[];
@@ -88,6 +90,9 @@ export class DataPointIndoorMapConfigComponent implements OnInit {
       measurement: {
         fragment: '',
         series: ''
+      },
+      mapSettings: {
+        zoomLevel: this.DEFAULT_ZOOM_LEVEL
       },
       legend: {
         title: '',

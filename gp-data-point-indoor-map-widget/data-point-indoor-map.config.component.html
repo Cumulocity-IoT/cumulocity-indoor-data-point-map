@@ -26,6 +26,18 @@
     </ng-select>
   </c8y-form-group>
   <div class="legend form-block">
+    Map Settings
+  </div>
+  <c8y-form-group>
+    <label>Zoom level</label>
+    <input
+      type="number"
+      class="form-control"
+      [(ngModel)]="config.mapSettings.zoomLevel"
+      step="0.25"
+    />
+  </c8y-form-group>
+  <div class="legend form-block">
     Legend
   </div>
   <c8y-form-group>

@@ -20,6 +20,9 @@ import { IManagedObject } from '@c8y/client';
 export interface WidgetConfiguration {
   mapConfigurationId: string;
   measurement: Datapoint;
+  mapSettings: {
+    zoomLevel: number;
+  };
   legend?: {
     title: string;
     thresholds?: Threshold[];
