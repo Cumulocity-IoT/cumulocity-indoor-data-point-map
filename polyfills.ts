@@ -18,27 +18,25 @@
  * BROWSER POLYFILLS
  */
 
-/** IE9, IE10, IE11, Evergreen browsers require the following polyfills. */
-import '@angular-devkit/build-angular/src/angular-cli-files/models/jit-polyfills.js';
-
 /**
  * By default, zone.js will patch all possible macroTask and DomEvents
  * user can disable parts of macroTask/DomEvents patch by setting following flags
  */
 
-(window as any).__Zone_disable_requestAnimationFrame = true; // disable patch requestAnimationFrame
-// (window as any).__Zone_disable_on_property = true; // disable patch onProperty such as onclick
-(window as any).__zone_symbol__BLACK_LISTED_EVENTS = [
-  'scroll',
-  'mousemove',
-  'message',
-  'mouseover',
-  'mouseout',
-  'mouseenter',
-  'mouseleave'
-]; // disable patch specified eventNames
-
-/***************************************************************************************************
- * Zone JS is required by default for Angular itself.
- */
-import 'zone.js/dist/zone'; // Included with Angular CLI.
+ (window as any).__Zone_disable_requestAnimationFrame = true; // disable patch requestAnimationFrame
+ // (window as any).__Zone_disable_on_property = true; // disable patch onProperty such as onclick
+ (window as any).__zone_symbol__BLACK_LISTED_EVENTS = [
+   'scroll',
+   'mousemove',
+   'message',
+   'mouseover',
+   'mouseout',
+   'mouseenter',
+   'mouseleave'
+ ]; // disable patch specified eventNames
+ 
+ /***************************************************************************************************
+  * Zone JS is required by default for Angular itself.
+  */
+ import 'zone.js/dist/zone'; // Included with Angular CLI.
+ 

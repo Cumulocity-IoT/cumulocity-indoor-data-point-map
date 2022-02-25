@@ -6,19 +6,8 @@ import { CoreModule, RouterModule } from '@c8y/ngx-components';
 import {
   DashboardUpgradeModule,
   UpgradeModule,
-  HybridAppModule,
-  UPGRADE_ROUTES
+  HybridAppModule
 } from '@c8y/ngx-components/upgrade';
-import { AssetsNavigatorModule } from '@c8y/ngx-components/assets-navigator';
-import { SubAssetsModule } from '@c8y/ngx-components/sub-assets';
-import {
-  CockpitDashboardModule,
-  ReportDashboardModule
-} from '@c8y/ngx-components/context-dashboard';
-import { ReportsModule } from '@c8y/ngx-components/reports';
-import { SensorPhoneModule } from '@c8y/ngx-components/sensor-phone';
-import { BinaryFileDownloadModule } from '@c8y/ngx-components/binary-file-download';
-import { SearchModule } from '@c8y/ngx-components/search';
 import { DashboardModule } from './src/dashboard.module';
 
 @NgModule({
