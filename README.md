@@ -34,7 +34,7 @@ An example:
 5. Select `Install Widget` and follow the instructions.
 
 ### Development - to do the enhancements and testing locally
-1. Clone the repository on local machine using `git clone {{path}}`.
+1. Clone the repository on local machine using `git clone git@github.com:SoftwareAG/cumulocity-indoor-data-point-map.git`.
 2. Run `npm install` to download the module dependencies.
 3. Update start script in the `package.json` and add your Cumulocity tenant URL: `c8ycli server -u https://your_tenant_url` 
 4. Run `npm run start` to start the local server.
@@ -43,7 +43,7 @@ An example:
 ### Build - to create a new build for the Runtime Widget Loader
 1. Finish the development and testing on your local machine.
 2. Run `npm run runtime` to trigger the build process using gulp
-3. Once the build has finished, the newly created zip archive is available in `./runtime/dist/indoor-air-qality-widget-{{version}}.zip`
+3. Once the build has finished, the newly created zip archive is available in `./runtime/dist/indoor-data-point-map-widget-{version}.zip.zip`
 
 ------------------------------
   
