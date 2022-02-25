@@ -15,7 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AfterViewInit, Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  Input,
+  OnInit,
+  ViewChild,
+  ViewEncapsulation
+} from '@angular/core';
 import { IManagedObject } from '@c8y/client';
 import {
   Datapoint,
@@ -45,6 +53,8 @@ const L: any = window.L;
 })
 export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
   @Input() config: WidgetConfiguration;
+
+  @ViewChild('IndoorDataPointMap', { read: ElementRef, static: true }) mapReference: ElementRef;
 
   private readonly MARKER_DEFAULT_COLOR = '#1776BF';
 
@@ -233,7 +243,7 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
       this.mapConfiguration.levels[this.currentFloorLevel].blob
     );
 
-    this.map = L.map('map', {
+    this.map = L.map(this.mapReference.nativeElement, {
       center: [0, 0],
       zoom: 20.25,
       zoomDelta: 0.25,
