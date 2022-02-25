@@ -4,7 +4,7 @@
     "dist\\bundle-src\\custom-widget.js": "indoor-data-point-map-widget-CustomWidget",
     "dist/bundle-src/custom-widget.js": "indoor-data-point-map-widget-CustomWidget"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Display an indoor floor plan and its markers configured with the smart map settings widget. Display configured measurements and define thresholds.",
   "author": "Christian Guether - Software AG, Global Presales",
   "license": "Apache 2.0"
