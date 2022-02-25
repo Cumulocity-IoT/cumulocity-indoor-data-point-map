@@ -1,7 +1,9 @@
 {
   "name": "cockpit",
   "version": "1.0.0",
-  "description": "",
+  "description": "The indoor data point map widget displays devices and their measurements on an indoor floor plan.",
+  "author": "Christian Guether - Software AG, Professional Services",
+  "license": "Apache 2.0",
   "main": "index.js",
   "scripts": {
     "start": "c8ycli server -u {{tenant-url}}",
@@ -12,8 +14,6 @@
     "prettier:all": "cd ./gp-data-point-indoor-map-widget && prettier --write \"**/*.@(js|ts|html|md|css|less|json|yaml)\" \"!**/*.min.*\""
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@angular/animations": "8.2.13",
     "@angular/cdk": "8.2.3",
