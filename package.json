@@ -1,6 +1,6 @@
 {
   "name": "cockpit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "The indoor data point map widget displays devices and their measurements on an indoor floor plan.",
   "author": "Christian Guether - Software AG, Professional Services",
   "license": "Apache 2.0",
