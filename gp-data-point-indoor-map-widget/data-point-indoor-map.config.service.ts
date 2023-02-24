@@ -17,7 +17,7 @@
  */
 import { Injectable } from '@angular/core';
 import { FetchClient, IManagedObject, InventoryService } from '@c8y/client';
-import { has, get } from 'lodash';
+import { has, get } from 'lodash-es';
 import { MapConfiguration } from './data-point-indoor-map.model';
 
 @Injectable()

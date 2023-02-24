@@ -1,41 +1,24 @@
 import { NgModule } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { RouterModule as NgRouterModule } from '@angular/router';
-import { UpgradeModule as NgUpgradeModule } from '@angular/upgrade/static';
-import { CoreModule, RouterModule } from '@c8y/ngx-components';
-import {
-  DashboardUpgradeModule,
-  UpgradeModule,
-  HybridAppModule,
-  UPGRADE_ROUTES
-} from '@c8y/ngx-components/upgrade';
-import { AssetsNavigatorModule } from '@c8y/ngx-components/assets-navigator';
-import { SubAssetsModule } from '@c8y/ngx-components/sub-assets';
-import {
-  CockpitDashboardModule,
-  ReportDashboardModule
-} from '@c8y/ngx-components/context-dashboard';
-import { ReportsModule } from '@c8y/ngx-components/reports';
-import { SensorPhoneModule } from '@c8y/ngx-components/sensor-phone';
-import { BinaryFileDownloadModule } from '@c8y/ngx-components/binary-file-download';
-import { SearchModule } from '@c8y/ngx-components/search';
-import { DashboardModule } from './src/dashboard.module';
+import { RouterModule as ngRouterModule } from '@angular/router';
+import { BootstrapComponent, CoreModule, RouterModule } from '@c8y/ngx-components';
+import { CockpitDashboardModule } from '@c8y/ngx-components/context-dashboard';
+import { BsModalRef } from 'ngx-bootstrap/modal';
+
+// Translations
+import './locales/de.po'; // <- adding additional strings to the german translation.
+import { DataPointIndoorMapModule } from './gp-data-point-indoor-map-widget/data-point-indoor-map.module';
 
 @NgModule({
   imports: [
-    // Upgrade module must be the first
-    UpgradeModule,
     BrowserAnimationsModule,
+    ngRouterModule.forRoot([], { enableTracing: false, useHash: true }),
     RouterModule.forRoot(),
-    NgRouterModule.forRoot([], { enableTracing: false, useHash: true }),
     CoreModule.forRoot(),
-    NgUpgradeModule,
-    DashboardUpgradeModule,
-    DashboardModule
-  ]
+    CockpitDashboardModule,
+    DataPointIndoorMapModule
+  ],
+  providers: [BsModalRef],
+  bootstrap: [BootstrapComponent]
 })
-export class AppModule extends HybridAppModule {
-  constructor(protected upgrade: NgUpgradeModule) {
-    super();
-  }
-}
+export class AppModule {}

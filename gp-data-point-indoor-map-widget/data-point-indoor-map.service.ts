@@ -30,7 +30,7 @@ import {
   MapConfigurationLevel,
   Measurement
 } from './data-point-indoor-map.model';
-import { has, get } from 'lodash';
+import { has, get } from 'lodash-es';
 import { Subject } from 'rxjs';
 
 @Injectable()

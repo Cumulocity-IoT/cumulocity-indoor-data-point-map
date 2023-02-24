@@ -32,7 +32,7 @@ import {
   WidgetConfiguration
 } from './data-point-indoor-map.model';
 import { DataPointIndoorMapService } from './data-point-indoor-map.service';
-import { has, get } from 'lodash';
+import { has, get } from 'lodash-es';
 import { Router } from '@angular/router';
 
 declare global {
@@ -42,7 +42,7 @@ declare global {
   }
 }
 
-import 'leaflet2/dist/leaflet.js';
+import 'leaflet/dist/leaflet.js';
 const L: any = window.L;
 @Component({
   selector: 'data-point-indoor-map',

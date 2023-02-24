@@ -26,7 +26,6 @@ import {
   HOOK_COMPONENTS
 } from '@c8y/ngx-components';
 import { ContextWidgetConfig } from '@c8y/ngx-components/context-dashboard';
-import { NgSelectModule } from '@ng-select/ng-select';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { AddThresholdModalComponent } from './add-threshold-modal/add-threshold-modal.component';
 import { previewImage } from './assets/preview-image';
@@ -34,13 +33,11 @@ import { DataPointIndoorMapComponent } from './data-point-indoor-map.component';
 import { DataPointIndoorMapConfigComponent } from './data-point-indoor-map.config.component';
 import { ColorPickerModule } from 'ngx-color-picker';
 import { ManagedDatapointsPopupModalComponent } from './managed-datapoints-popup-modal/managed-datapoints-popup-modal.component';
-import { DataPointIndoorMapConfigService } from './data-point-indoor-map.config.service';
 import { ModalModule } from 'ngx-bootstrap/modal';
 
 @NgModule({
   imports: [
     CoreModule,
-    NgSelectModule,
     TooltipModule,
     NgCommonModule,
     NgFormModule,

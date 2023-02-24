@@ -1,7 +1,7 @@
 <div class="form-group">
   <c8y-form-group>
     <label>Map Configurations</label>
-    <ng-select
+    <c8y-select
       name="map-configuration"
       placeholder="Select Map Configuration"
       [items]="mapConfigurations"
@@ -10,20 +10,20 @@
       (change)="onMapConfigurationChanged()"
       required
     >
-    </ng-select>
+    </c8y-select>
   </c8y-form-group>
   <c8y-form-group>
     <label>Primary Measurement</label>
-    <ng-select
+    <c8y-select
       name="primary-measurement"
       placeholder="Select Primary Measurement"
       [items]="dataPointSeries"
       [(ngModel)]="selectedDataPoint"
-      [readonly]="!selectedMapConfiguration"
+      [disabled]="!selectedMapConfiguration"
       (change)="onPrimaryMeasurementChanged()"
       required
     >
-    </ng-select>
+    </c8y-select>
   </c8y-form-group>
   <div class="legend form-block">
     Map Settings
