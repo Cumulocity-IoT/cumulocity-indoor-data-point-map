@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { CoreModule } from '@c8y/ngx-components';
 import type * as L from 'leaflet';
 import { fromEvent, Subject, takeUntil } from 'rxjs';
@@ -12,7 +12,7 @@ import { MarkerManagedObject } from '../../../data-point-indoor-map.model';
   standalone: true,
   imports: [CoreModule, CommonModule],
 })
-export class MoveMarkerMapComponent implements OnInit, AfterViewInit, OnDestroy {
+export class MoveMarkerMapComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   private readonly MARKER_DEFAULT_COLOR = '#1776BF';
 
   leaf!: Promise<typeof L>;
@@ -28,6 +28,15 @@ export class MoveMarkerMapComponent implements OnInit, AfterViewInit, OnDestroy 
 
   async ngOnInit() {
     this.leaf = import('leaflet');
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    const deviceChanges = changes['device'];
+    const imageBlobChanges = changes['imageBlob'];
+    const isResused = (deviceChanges && !deviceChanges.isFirstChange()) || (imageBlobChanges && !imageBlobChanges.isFirstChange());
+    if (isResused) {
+      this.reload(!!imageBlobChanges);
+    }
   }
 
   async ngAfterViewInit() {
@@ -48,12 +57,50 @@ export class MoveMarkerMapComponent implements OnInit, AfterViewInit, OnDestroy 
       center: [height * 0.5, width * 0.5],
       zoom: 0,
     });
-    
+
     this.addImageToMap(url, width, height, l);
 
     fromEvent<L.LeafletMouseEvent>(this.map, 'click')
       .pipe(takeUntil(this.destroy$))
       .subscribe((e) => this.onClick(e, l));
+
+    if (this.device?.c8y_IndoorPosition) {
+      const { lat, lng } = this.device.c8y_IndoorPosition;
+      const latlng: L.LatLng = l.latLng(lat, lng);
+      this.updateMarkerPosition(latlng, l);
+    }
+  }
+
+  private async reload(reloadImage: boolean) {
+    const map = this.map!;
+
+    if (reloadImage) {
+      map.eachLayer((layer) => {
+        layer.removeFrom(map);
+      });
+    } else if (this.marker) {
+      this.marker.removeFrom(map);
+    }
+
+    const l = await this.leaf;
+
+    if (reloadImage && this.imageBlob) {
+      const {
+        dimensions: { width, height },
+      } = await this.readImage(this.imageBlob!);
+
+      const bounds = l.latLngBounds([0, 0], [height, width]);
+      map.setMaxBounds(bounds);
+
+      const imgBlobURL = URL.createObjectURL(this.imageBlob!);
+      l.imageOverlay(imgBlobURL, bounds, {
+        opacity: 1,
+        interactive: false,
+        zIndex: -1000,
+      }).addTo(map);
+      const point = l.latLng(height * 0.5, width * 0.5);
+      map.setView(point, 0, { animate: true });
+    }
 
     if (this.device?.c8y_IndoorPosition) {
       const { lat, lng } = this.device.c8y_IndoorPosition;

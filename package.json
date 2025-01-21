@@ -2,7 +2,7 @@
   "author": "Christian Guether and Hendrik Naether",
   "description": "Display markers on a indoor map and their datapoints",
   "name": "cumulocity-indoor-datap-point-map",
-  "version": "0.0.0",
+  "version": "2.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --shell cockpit-1021",

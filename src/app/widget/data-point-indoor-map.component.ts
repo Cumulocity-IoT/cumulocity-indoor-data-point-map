@@ -254,22 +254,17 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
 
     const { width, height } = level.imageDetails!.dimensions!;
     const bounds = this.leaf.latLngBounds([0, 0], [height, width]);
-    map.setMaxBounds(bounds);
 
     if (level.blob) {
       const imgBlobURL = URL.createObjectURL(level.blob);
-      this.leaf
-        .imageOverlay(imgBlobURL, bounds, {
-          opacity: 1,
-          interactive: false,
-          zIndex: -1000,
-        })
-        .addTo(map);
+      const imageOverlay = this.leaf.imageOverlay(imgBlobURL, bounds, {
+        opacity: 1,
+        interactive: false,
+        zIndex: -1000,
+      });
+      imageOverlay.addTo(map);
+      map.fitBounds(imageOverlay.getBounds());
     }
-
-    const zoom = this.config.mapSettings && this.config.mapSettings.zoomLevel ? this.config.mapSettings.zoomLevel : this.DEFAULT_ZOOM_LEVEL;
-    const point = this.leaf.latLng(height * 0.5, width * 0.5);
-    map.setView(point, zoom, { animate: true });
   }
 
   /**
@@ -483,8 +478,12 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
    * @param measurement
    * @returns color as hex string
    */
-  private getBackgroundColor(measurement: Measurement): string {
+  private getBackgroundColor(measurement: Measurement | undefined): string {
     if (!this.config.legend || !this.config.legend.thresholds || this.config.legend.thresholds.length === 0) {
+      return this.MARKER_DEFAULT_COLOR;
+    }
+
+    if (!measurement) {
       return this.MARKER_DEFAULT_COLOR;
     }
 
