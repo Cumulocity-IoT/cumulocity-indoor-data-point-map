@@ -1,0 +1,34 @@
+<div *ngIf="!devicesFixed">
+  <div class="input-group input-group-search">
+    <input type="search" class="form-control" placeholder="Device name" [(ngModel)]="searchText" (keyup)="handleSearchKeyUp()" />
+    <span class="input-group-btn">
+      <button title="Select" class="btn btn-clean text-primary" type="button" (click)="search()" aria-label="loading">
+        <i c8y-icon="search" [ngClass]="{ 'icon-spin': loading }" class="dlt-c8y-icon-search"></i>
+      </button>
+    </span>
+  </div>
+  <c8y-list-group cdkDropList [cdkDropListData]="devices">
+    <c8y-li *ngFor="let device of devices" #li cdkDrag [cdkDragData]="device" [ngClass]="{ 'drag-handle': !isFrozen, draggableCursor: !isFrozen }">
+      <c8y-li-icon [icon]="'sensor'"></c8y-li-icon>
+      {{ device['name'] || '-' }}
+    </c8y-li>
+  </c8y-list-group>
+</div>
+
+<c8y-list-group class="list-drop-container" *ngIf="devicesFixed" cdkDropList [cdkDropListData]="devicesFixed" (cdkDropListDropped)="onDrop($event)">
+  <c8y-li *ngFor="let device of devicesFixed" #li cdkDrag [cdkDragData]="device" [ngClass]="{ 'drag-handle': !isFrozen, draggableCursor: !isFrozen }">
+    <c8y-li-icon [icon]="'sensor'"></c8y-li-icon>
+    <c8y-li-body class="d-flex">
+      <p class="li-flex-title">{{ device['name'] || '-' }}</p>
+      <button type="button" class="btn btn-dot btn-dot--danger" aria-label="Remove" (click)="onRemove(device)"><i c8yicon="minus-circle" class="c8y-icon dlt-c8y-icon-minus-circle"></i></button>
+    </c8y-li-body>
+  </c8y-li>
+
+  <div *ngIf="devicesFixed.length === 0" class="empty-drop-container">
+    <i c8yIcon="chevron-double-down" class="c8y-icon"></i>
+    <p><b>Drop device here</b><br /><span translate=""></span></p>
+  </div>
+  <div class="d-flex j-c-start m-l-8">
+    <button class="btn btn-link animated fadeIn" (click)="openAssignDevicesModal()"><i c8yIcon="plus-circle" class="c8y-icon"></i>{{ 'Assign devices' | translate }}</button>
+  </div>
+</c8y-list-group>

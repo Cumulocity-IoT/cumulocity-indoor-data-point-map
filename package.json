@@ -1,92 +1,51 @@
 {
-  "name": "cumulocity-indoor-data-point-map",
-  "version": "1016.0.131",
-  "description": "This is the Cumulocity module federation plugin. Plugins can be developed like any Cumulocity application, but can be used at runtime by other applications. Therefore, they export an Angular module which can then be imported by any other application. The exports are defined in `package.json`:",
+  "author": "Christian Guether and Hendrik Naether",
+  "description": "Display markers on a indoor map and their datapoints",
+  "name": "cumulocity-indoor-datap-point-map",
+  "version": "0.0.0",
   "scripts": {
-    "start": "c8ycli server -u https://entelios-dev.eu-latest.cumulocity.com/ --shell cockpit-1016",
-    "build": "c8ycli build",
-    "deploy": "c8ycli deploy",
-    "postinstall": "ngcc"
+    "ng": "ng",
+    "start": "ng serve --shell cockpit-1021",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hnaether-sag/cumulocity-indoor-data-point-map.git"
-  },
-  "keywords": [
-    "Cumulocity",
-    "Plugin",
-    "indoor",
-    "map",
-    "widget"
-  ],
-  "author": "Christian Guether",
-  "license": "Apache 2.0",
-  "bugs": {
-    "url": "https://github.com/hnaether-sag/cumulocity-indoor-data-point-map/issues"
-  },
-  "homepage": "https://github.com/hnaether-sag/cumulocity-indoor-data-point-map#readme",
+  "private": true,
   "dependencies": {
-    "@angular/animations": "14.0.6",
-    "@angular/cdk": "14.1.2",
-    "@angular/common": "14.0.6",
-    "@angular/compiler": "14.0.6",
-    "@angular/core": "14.0.6",
-    "@angular/forms": "14.0.6",
-    "@angular/platform-browser": "14.0.6",
-    "@angular/platform-browser-dynamic": "14.0.6",
-    "@angular/router": "14.0.6",
-    "@angular/upgrade": "14.0.6",
-    "@c8y/client": "1016.0.131",
-    "@c8y/ngx-components": "1016.0.131",
-    "@c8y/style": "1016.0.131",
-    "@ngx-translate/core": "14.0.0",
-    "@types/lodash-es": "^4.17.6",
-    "leaflet": "^1.9.3",
-    "ngx-color-picker": "^13.0.0",
-    "rxjs": "~6.6.3",
-    "zone.js": "~0.11.7"
+    "@angular/animations": "^18.2.0",
+    "@angular/cdk": "^18.2.10",
+    "@angular/common": "^18.2.0",
+    "@angular/compiler": "^18.2.0",
+    "@angular/core": "^18.2.0",
+    "@angular/forms": "^18.2.0",
+    "@angular/platform-browser": "^18.2.0",
+    "@angular/platform-browser-dynamic": "^18.2.0",
+    "@angular/router": "^18.2.0",
+    "@c8y/bootstrap": "1021.29.1",
+    "@c8y/client": "1021.29.1",
+    "@c8y/ngx-components": "1021.29.1",
+    "@c8y/style": "1021.29.1",
+    "ngx-bootstrap": "18.0.0",
+    "ngx-color-picker": "^17.0.0",
+    "rxjs": "^7.8.1",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.14.10"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "14.0.6",
-    "@angular/compiler-cli": "14.0.6",
-    "@angular/language-service": "14.0.6",
-    "@angular/service-worker": "14.0.6",
-    "@angular/localize": "14.0.6",
-    "@types/jest": "^28.1.6",
-    "jest": "^28.1.3",
-    "jest-preset-angular": "^12.2.0",
-    "typescript": "4.7.4",
-    "@c8y/cli": "1016.0.131"
-  },
-  "c8y": {
-    "application": {
-      "name": "cumulocity-indoor-data-point-map",
-      "description": "Cumulocity IoT Indoor data point map. Display measurements of beacons in indoor maps.",
-      "contextPath": "sag-ps-iot-pkg-indoor-data-point-map",
-      "key": "sag-ps-iot-pkg-indoor-data-point-map-key",
-      "globalTitle": "Cumulocity IoT Indoor data point map",
-      "tabsHorizontal": true,
-      "isPackage": true,
-      "noAppSwitcher": true,
-      "requiredPlatformVersion": "1016.0",
-      "package": "plugin",
-      "exports": [
-        {
-          "name": "Cumulocity IoT Indoor data point map",
-          "module": "DataPointIndoorMapModule",
-          "path": "./gp-data-point-indoor-map-widget/data-point-indoor-map.module.ts",
-          "description": "Adds Cumulocity IoT Indoor data point map widget."
-        }
-      ],
-      "remotes": {
-        "widget-plugin": [
-          "DataPointIndoorMapModule"
-        ]
-      }
-    },
-    "cli": {}
-  },
-  "browserslist": [
-    "last 2 major versions"
-  ]
+    "@angular-devkit/build-angular": "^18.2.12",
+    "@angular/cli": "^18.2.12",
+    "@angular/compiler-cli": "^18.2.0",
+    "@c8y/devkit": "1021.29.1",
+    "@c8y/options": "1021.29.1",
+    "@types/jasmine": "~5.1.0",
+    "@types/leaflet": "^1.9.12",
+    "@types/lodash": "^4.14.196",
+    "jasmine-core": "~5.2.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~5.5.2"
+  }
 }
