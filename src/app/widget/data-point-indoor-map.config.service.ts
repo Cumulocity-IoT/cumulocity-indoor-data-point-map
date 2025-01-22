@@ -19,7 +19,7 @@ import { Injectable } from '@angular/core';
 import { InventoryService } from '@c8y/client';
 import { has, get } from 'lodash';
 import { isMapConfigutaration, MapConfiguration } from './data-point-indoor-map.model';
-import { AlertService, ModalService } from '@c8y/ngx-components';
+import { AlertService, ModalService, Status } from '@c8y/ngx-components';
 
 @Injectable()
 export class DataPointIndoorMapConfigService {
@@ -48,7 +48,7 @@ export class DataPointIndoorMapConfigService {
   }
 
   deleteMapConfiguration(mapConfigurationId: string) {
-    return this.modal.confirm('Delete map configuration', 'Are you sure you want to delete this map configuration?').then((result) => {
+    return this.modal.confirm('Delete map configuration', 'Are you sure you want to delete this map configuration?', Status.DANGER).then((result) => {
       if (result) {
         return this.inventoryService.delete(mapConfigurationId).then(
           () => {
