@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { IManagedObject } from '@c8y/client';
 import { Datapoint, MapConfiguration, MapConfigurationLevel, MarkerManagedObject, Measurement, WidgetConfiguration } from './data-point-indoor-map.model';
 import { DataPointIndoorMapService } from './data-point-indoor-map.service';
 import { has } from 'lodash';
 import type * as L from 'leaflet';
 import { MeasurementRealtimeService } from '@c8y/ngx-components';
-import { Subscription } from 'rxjs';
+import { fromEvent, Subscription, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'data-point-indoor-map',
@@ -31,7 +31,7 @@ import { Subscription } from 'rxjs';
   providers: [DataPointIndoorMapService, MeasurementRealtimeService],
   encapsulation: ViewEncapsulation.None,
 })
-export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
+export class DataPointIndoorMapComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() config!: WidgetConfiguration;
   @ViewChild('IndoorDataPointMap', { read: ElementRef, static: true }) mapReference!: ElementRef;
 
@@ -54,6 +54,8 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
   primaryMeasurementReceivedSub?: Subscription;
   isLoading = false;
 
+  destroy$ = new EventEmitter<void>();
+
   constructor(private mapService: DataPointIndoorMapService) {}
 
   async ngOnInit() {
@@ -72,6 +74,16 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
     this.map = this.initMap(this.building, level);
     this.initMarkers(this.map, level);
     this.renderLegend(this.map);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    try {
+      this.map?.clearAllEventListeners();
+    } catch (e) {
+      console.warn(e);
+    }
   }
 
   async onLevelChanged() {
@@ -163,7 +175,7 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
    * is used to color the map marker instance correctly based on the legend.
    */
   private listenToPrimaryMeasurementUpdates(level: number): void {
-    this.primaryMeasurementReceivedSub = this.mapService.primaryMeasurementReceived$.subscribe(({ deviceId, measurement }) => {
+    this.primaryMeasurementReceivedSub = this.mapService.primaryMeasurementReceived$.pipe(takeUntil(this.destroy$)).subscribe(({ deviceId, measurement }) => {
       const markerManagedObject = this.markerManagedObjectsForFloorLevel[level][deviceId];
       if (!markerManagedObject) {
         return;
@@ -184,7 +196,7 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
    * received measurements
    */
   private listenToConfiguredMeasurementUpdates(level: number) {
-    this.measurementReceivedSub = this.mapService.measurementReceived$.subscribe(({ deviceId, measurement }) => {
+    this.measurementReceivedSub = this.mapService.measurementReceived$.pipe(takeUntil(this.destroy$)).subscribe(({ deviceId, measurement }) => {
       const datapoint = `${measurement.datapoint.fragment}.${measurement.datapoint.series}`;
       const managedObject = this.markerManagedObjectsForFloorLevel[level][deviceId];
 
@@ -222,13 +234,25 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
     const { width, height } = currentMapConfigurationLevel.imageDetails!.dimensions!;
     const bounds = this.leaf.latLngBounds([0, 0], [height, width]);
 
-    const zoom = this.config.mapSettings && this.config.mapSettings.zoomLevel ? this.config.mapSettings.zoomLevel : this.DEFAULT_ZOOM_LEVEL;
+    let zoom = this.config.mapSettings && this.config.mapSettings.zoomLevel ? this.config.mapSettings.zoomLevel : this.DEFAULT_ZOOM_LEVEL;
+    const cachedZoom = localStorage.getItem(`${this.config.mapConfigurationId}-${this.currentFloorLevel}-zoom`);
+    if (cachedZoom != null) {
+      zoom = +cachedZoom;
+    }
+
+    let center: L.LatLngExpression = [height * 0.5, width * 0.5];
+    const cachedCenter = localStorage.getItem(`${this.config.mapConfigurationId}-${this.currentFloorLevel}-center`);
+    if (cachedCenter != null) {
+      center = JSON.parse(cachedCenter);
+    }
 
     const map = this.leaf.map(this.mapReference.nativeElement, {
       crs: this.leaf.CRS.Simple,
       minZoom: -2,
-      maxZoom: 1,
-      center: [height * 0.5, width * 0.5],
+      maxZoom: 2,
+      zoomSnap: 0.25,
+      zoomDelta: 0.25,
+      center,
       zoom,
     });
 
@@ -241,9 +265,24 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
           zIndex: -1000,
         })
         .addTo(map);
+      fromEvent<L.LeafletEvent>(map, 'zoomend')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.onZoomEnd());
+
+      fromEvent<L.LeafletEvent>(map, 'dragend')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.onDragEnd());
     }
 
     return map;
+  }
+
+  private onZoomEnd() {
+    localStorage.setItem(`${this.config.mapConfigurationId}-${this.currentFloorLevel}-zoom`, this.map!.getZoom().toString());
+  }
+
+  private onDragEnd() {
+    localStorage.setItem(`${this.config.mapConfigurationId}-${this.currentFloorLevel}-center`, JSON.stringify(this.map!.getCenter()));
   }
 
   private updateMapLevel(level: MapConfigurationLevel) {
@@ -263,7 +302,20 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
         zIndex: -1000,
       });
       imageOverlay.addTo(map);
-      map.fitBounds(imageOverlay.getBounds());
+
+      let zoom: number | undefined = undefined;
+      const cachedZoom = localStorage.getItem(`${this.config.mapConfigurationId}-${this.currentFloorLevel}-zoom`);
+      if (cachedZoom != null) {
+        zoom = +cachedZoom;
+      }
+
+      const cachedCenter = localStorage.getItem(`${this.config.mapConfigurationId}-${this.currentFloorLevel}-center`);
+      if (cachedCenter != null) {
+        const center = JSON.parse(cachedCenter);
+        map.setView(center, zoom);
+      } else {
+        map.fitBounds(imageOverlay.getBounds());
+      }
     }
   }
 
@@ -383,7 +435,7 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
    */
   private createPopupInstance(managedObject: IManagedObject, geolocation: any): any {
     const popup = this.leaf.popup({
-      closeButton: true,
+      closeButton: false,
       autoClose: true,
       className: 'indoor-map-popup',
     });
@@ -442,9 +494,9 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
    * @returns header as an html string
    */
   private getPopupHeader(managedObject: IManagedObject): string {
-    if (!has(managedObject, 'dashboardId')) {
-      return `<h5>${managedObject['name']}</h5><hr />`;
-    }
+    // if (!has(managedObject, 'dashboardId')) {
+    //   return `<h5>${managedObject['name']}</h5><hr />`;
+    // }
 
     return `<a href="#/device/${managedObject.id}"><h5>${managedObject['name']}</h5></a><hr />`;
   }
