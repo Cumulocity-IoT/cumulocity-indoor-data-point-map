@@ -30,13 +30,11 @@ export interface WidgetConfiguration {
   datapointsPopup?: DatapointPopup[];
 }
 
-export interface Threshold {
+export type Threshold = {
   id: string;
   label: string;
-  min: number;
-  max: number;
   color: string;
-}
+} & ({ type: 'measurement'; min: number; max: number } | { type: 'event'; text: string; eventType?: string });
 
 export interface DatapointPopup {
   measurement: Datapoint;
@@ -88,5 +86,5 @@ export interface MarkerManagedObject extends IManagedObject {
   c8y_IndoorPosition?: {
     lat: number;
     lng: number;
-  }
+  };
 }
