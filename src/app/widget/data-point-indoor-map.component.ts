@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
-import { IManagedObject } from '@c8y/client';
-import { Datapoint, MapConfiguration, MapConfigurationLevel, MarkerManagedObject, Measurement, WidgetConfiguration } from './data-point-indoor-map.model';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { IEvent, IManagedObject } from '@c8y/client';
+import { Datapoint, MapConfiguration, MapConfigurationLevel, MarkerManagedObject, Measurement, Threshold, WidgetConfiguration } from './data-point-indoor-map.model';
 import { DataPointIndoorMapService } from './data-point-indoor-map.service';
-import { has } from 'lodash';
 import type * as L from 'leaflet';
 import { MeasurementRealtimeService } from '@c8y/ngx-components';
-import { Subscription } from 'rxjs';
+import { fromEvent, Subscription, takeUntil } from 'rxjs';
+import { EventPollingService } from './polling/event-polling.service';
 
 @Component({
   selector: 'data-point-indoor-map',
   templateUrl: 'data-point-indoor-map.component.html',
   styleUrls: ['./data-point-indoor-map.component.less'],
-  providers: [DataPointIndoorMapService, MeasurementRealtimeService],
+  providers: [DataPointIndoorMapService, MeasurementRealtimeService, EventPollingService],
   encapsulation: ViewEncapsulation.None,
 })
-export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
+export class DataPointIndoorMapComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() config!: WidgetConfiguration;
   @ViewChild('IndoorDataPointMap', { read: ElementRef, static: true }) mapReference!: ElementRef;
 
@@ -46,15 +46,20 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
   currentLevel?: MapConfigurationLevel;
 
   private markerManagedObjectsForFloorLevel: { [deviceId: string]: MarkerManagedObject }[] = [];
+  private primaryMeasurements = new Map<string, Measurement>();
+  private primaryEvents = new Map<string, IEvent>();
 
   leaf!: typeof L;
   map?: L.Map;
   building?: MapConfiguration;
   measurementReceivedSub?: Subscription;
   primaryMeasurementReceivedSub?: Subscription;
+  eventThresholdSub?: Subscription;
   isLoading = false;
 
-  constructor(private mapService: DataPointIndoorMapService) {}
+  destroy$ = new EventEmitter<void>();
+
+  constructor(private mapService: DataPointIndoorMapService, private eventPollingService: EventPollingService) {}
 
   async ngOnInit() {
     this.leaf = await import('leaflet');
@@ -64,24 +69,38 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
     this.isLoading = true;
     this.building = await this.loadMapConfiguration();
     await this.loadManagedObjectsForMarkers(this.building);
-
     const level = this.currentFloorLevel;
     await this.loadLatestPrimaryMeasurementForMarkers(level);
     this.initMeasurementUpdates(level);
     this.isLoading = false;
     this.map = this.initMap(this.building, level);
     this.initMarkers(this.map, level);
+    this.initEventUpdates(level);
     this.renderLegend(this.map);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    try {
+      this.map?.clearAllEventListeners();
+    } catch (e) {
+      console.warn(e);
+    }
   }
 
   async onLevelChanged() {
     this.isLoading = true;
     const level = this.currentFloorLevel;
     this.mapService.unsubscribeAllMeasurements();
+    if (this.eventThresholdSub) {
+      this.eventThresholdSub.unsubscribe();
+    }
 
     await this.loadLatestPrimaryMeasurementForMarkers(level);
     this.unsubscribeListeners();
     this.initMeasurementUpdates(level);
+    this.initEventUpdates(level);
     this.isLoading = false;
     this.updateMapLevel(this.building!.levels![level]);
     this.initMarkers(this.map!, level);
@@ -125,7 +144,7 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
     }
 
     const currentVisibleMarkerManagedObjects = this.markerManagedObjectsForFloorLevel[level];
-    const deviceIds: string[] = Object.keys(currentVisibleMarkerManagedObjects);
+    const deviceIds = Object.keys(currentVisibleMarkerManagedObjects);
 
     const measurements = await this.mapService.loadLatestMeasurements(deviceIds, this.config.measurement.fragment, this.config.measurement.series);
 
@@ -148,6 +167,24 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
     this.listenToConfiguredMeasurementUpdates(level);
   }
 
+  private initEventUpdates(level: number): void {
+    if (!this.isMarkersAvailableForCurrentFloorLevel(level)) {
+      return;
+    }
+    const thresholds = this.config.legend?.thresholds ?? [];
+    if (!thresholds.length) {
+      return;
+    }
+    const deviceIds: string[] = Object.keys(this.markerManagedObjectsForFloorLevel[level]);
+    this.eventThresholdSub = this.eventPollingService
+      .startPolling(deviceIds, thresholds)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((update) => {
+        this.primaryEvents.set(update.deviceId, update.event);
+        this.updateMarkerColor(update.deviceId);
+      });
+  }
+
   /**
    * subscribe for measurements (primary and configured measurements) for each device
    * which is available on the current floor level
@@ -163,19 +200,62 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
    * is used to color the map marker instance correctly based on the legend.
    */
   private listenToPrimaryMeasurementUpdates(level: number): void {
-    this.primaryMeasurementReceivedSub = this.mapService.primaryMeasurementReceived$.subscribe(({ deviceId, measurement }) => {
-      const markerManagedObject = this.markerManagedObjectsForFloorLevel[level][deviceId];
-      if (!markerManagedObject) {
-        return;
-      }
-
-      let mapMarkerInstance = markerManagedObject[this.KEY_MAP_MARKER_INSTANCE];
-      if (!mapMarkerInstance) {
-        return;
-      }
-
-      mapMarkerInstance.setStyle({ fillColor: this.getBackgroundColor(measurement) });
+    this.primaryMeasurementReceivedSub = this.mapService.primaryMeasurementReceived$.pipe(takeUntil(this.destroy$)).subscribe(({ deviceId, measurement }) => {
+      this.primaryMeasurements.set(deviceId, measurement);
+      this.updateMarkerColor(deviceId);
     });
+  }
+
+  private updateMarkerColor(deviceId: string) {
+    if (!this.config.legend?.thresholds?.length) {
+      return;
+    }
+    const thresholds = this.config.legend?.thresholds;
+    const primaryMeasurement = this.primaryMeasurements.get(deviceId);
+    const measurementThresholds = thresholds.filter((t) => t.type === 'measurement');
+    const primaryEvent = this.primaryEvents.get(deviceId);
+    const eventThresholds = thresholds.filter((t) => t.type === 'event');
+    let measurementThresholdMatch: Threshold | undefined = undefined;
+    let eventThresholdMatch: Threshold | undefined = undefined;
+
+    if (primaryMeasurement) {
+      measurementThresholdMatch = measurementThresholds.find((threshold) => primaryMeasurement.value >= threshold.min && primaryMeasurement.value <= threshold.max);
+    }
+    if (primaryEvent) {
+      eventThresholdMatch = eventThresholds.find((threshold) => threshold.text === primaryEvent.text && threshold.eventType === primaryEvent.type);
+    }
+
+    if (measurementThresholdMatch && !eventThresholdMatch) {
+      this.updateMarkerWithColor(deviceId, measurementThresholdMatch.color);
+    } else if (!measurementThresholdMatch && eventThresholdMatch) {
+      this.updateMarkerWithColor(deviceId, eventThresholdMatch.color);
+    } else if (measurementThresholdMatch && eventThresholdMatch) {
+      const measurementThresholdMatchIndex = thresholds.indexOf(measurementThresholdMatch);
+      const eventThresholdMatchIndex = thresholds.indexOf(eventThresholdMatch);
+      if (measurementThresholdMatchIndex < eventThresholdMatchIndex) {
+        this.updateMarkerWithColor(deviceId, measurementThresholdMatch.color);
+      } else {
+        this.updateMarkerWithColor(deviceId, eventThresholdMatch.color);
+      }
+    } else if (!measurementThresholdMatch && !eventThresholdMatch) {
+      this.updateMarkerWithColor(deviceId, this.MARKER_DEFAULT_COLOR);
+    }
+  }
+
+  private updateMarkerWithColor(deviceId: string, fillColor: string) {
+    let markerManagedObject: MarkerManagedObject | undefined;
+    const markerMOS = this.markerManagedObjectsForFloorLevel[this.currentFloorLevel];
+    markerManagedObject = markerMOS[deviceId];
+
+    if (!markerManagedObject) {
+      return;
+    }
+
+    let mapMarkerInstance = markerManagedObject[this.KEY_MAP_MARKER_INSTANCE];
+    if (!mapMarkerInstance) {
+      return;
+    }
+    mapMarkerInstance.setStyle({ fillColor });
   }
 
   /**
@@ -184,7 +264,7 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
    * received measurements
    */
   private listenToConfiguredMeasurementUpdates(level: number) {
-    this.measurementReceivedSub = this.mapService.measurementReceived$.subscribe(({ deviceId, measurement }) => {
+    this.measurementReceivedSub = this.mapService.measurementReceived$.pipe(takeUntil(this.destroy$)).subscribe(({ deviceId, measurement }) => {
       const datapoint = `${measurement.datapoint.fragment}.${measurement.datapoint.series}`;
       const managedObject = this.markerManagedObjectsForFloorLevel[level][deviceId];
 
@@ -222,13 +302,25 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
     const { width, height } = currentMapConfigurationLevel.imageDetails!.dimensions!;
     const bounds = this.leaf.latLngBounds([0, 0], [height, width]);
 
-    const zoom = this.config.mapSettings && this.config.mapSettings.zoomLevel ? this.config.mapSettings.zoomLevel : this.DEFAULT_ZOOM_LEVEL;
+    let zoom = this.config.mapSettings && this.config.mapSettings.zoomLevel ? this.config.mapSettings.zoomLevel : this.DEFAULT_ZOOM_LEVEL;
+    const cachedZoom = localStorage.getItem(`${this.config.mapConfigurationId}-${this.currentFloorLevel}-zoom`);
+    if (cachedZoom != null) {
+      zoom = +cachedZoom;
+    }
+
+    let center: L.LatLngExpression = [height * 0.5, width * 0.5];
+    const cachedCenter = localStorage.getItem(`${this.config.mapConfigurationId}-${this.currentFloorLevel}-center`);
+    if (cachedCenter != null) {
+      center = JSON.parse(cachedCenter);
+    }
 
     const map = this.leaf.map(this.mapReference.nativeElement, {
       crs: this.leaf.CRS.Simple,
       minZoom: -2,
-      maxZoom: 1,
-      center: [height * 0.5, width * 0.5],
+      maxZoom: 2,
+      zoomSnap: 0.25,
+      zoomDelta: 0.25,
+      center,
       zoom,
     });
 
@@ -241,9 +333,24 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
           zIndex: -1000,
         })
         .addTo(map);
+      fromEvent<L.LeafletEvent>(map, 'zoomend')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.onZoomEnd());
+
+      fromEvent<L.LeafletEvent>(map, 'dragend')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.onDragEnd());
     }
 
     return map;
+  }
+
+  private onZoomEnd() {
+    localStorage.setItem(`${this.config.mapConfigurationId}-${this.currentFloorLevel}-zoom`, this.map!.getZoom().toString());
+  }
+
+  private onDragEnd() {
+    localStorage.setItem(`${this.config.mapConfigurationId}-${this.currentFloorLevel}-center`, JSON.stringify(this.map!.getCenter()));
   }
 
   private updateMapLevel(level: MapConfigurationLevel) {
@@ -263,7 +370,20 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
         zIndex: -1000,
       });
       imageOverlay.addTo(map);
-      map.fitBounds(imageOverlay.getBounds());
+
+      let zoom: number | undefined = undefined;
+      const cachedZoom = localStorage.getItem(`${this.config.mapConfigurationId}-${this.currentFloorLevel}-zoom`);
+      if (cachedZoom != null) {
+        zoom = +cachedZoom;
+      }
+
+      const cachedCenter = localStorage.getItem(`${this.config.mapConfigurationId}-${this.currentFloorLevel}-center`);
+      if (cachedCenter != null) {
+        const center = JSON.parse(cachedCenter);
+        map.setView(center, zoom);
+      } else {
+        map.fitBounds(imageOverlay.getBounds());
+      }
     }
   }
 
@@ -383,7 +503,7 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
    */
   private createPopupInstance(managedObject: IManagedObject, geolocation: any): any {
     const popup = this.leaf.popup({
-      closeButton: true,
+      closeButton: false,
       autoClose: true,
       className: 'indoor-map-popup',
     });
@@ -442,9 +562,9 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
    * @returns header as an html string
    */
   private getPopupHeader(managedObject: IManagedObject): string {
-    if (!has(managedObject, 'dashboardId')) {
-      return `<h5>${managedObject['name']}</h5><hr />`;
-    }
+    // if (!has(managedObject, 'dashboardId')) {
+    //   return `<h5>${managedObject['name']}</h5><hr />`;
+    // }
 
     return `<a href="#/device/${managedObject.id}"><h5>${managedObject['name']}</h5></a><hr />`;
   }
@@ -487,19 +607,17 @@ export class DataPointIndoorMapComponent implements OnInit, AfterViewInit {
       return this.MARKER_DEFAULT_COLOR;
     }
 
-    const threshold = this.config.legend.thresholds.find((threshold) => measurement.value >= threshold.min && measurement.value <= threshold.max);
-    if (!threshold) {
-      return this.MARKER_DEFAULT_COLOR;
-    }
+    return this.MARKER_DEFAULT_COLOR;
 
-    return threshold.color;
+    // const threshold = this.config.legend.thresholds.find((threshold) => measurement.value >= threshold.min && measurement.value <= threshold.max);
+    // if (!threshold) {
+    //   return this.MARKER_DEFAULT_COLOR;
+    // }
+
+    // return threshold.color;
   }
 
   private isMarkersAvailableForCurrentFloorLevel(level: number): boolean {
     return this.markerManagedObjectsForFloorLevel && this.markerManagedObjectsForFloorLevel.length > 0 && !!this.markerManagedObjectsForFloorLevel[level];
-  }
-
-  private isGeolocationAvailable(managedObject: IManagedObject): boolean {
-    return has(managedObject, 'c8y_Position.lat') && has(managedObject, 'c8y_Position.lng');
   }
 }

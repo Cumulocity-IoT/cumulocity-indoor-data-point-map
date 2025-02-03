@@ -16,30 +16,74 @@
  * limitations under the License.
  */
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Threshold } from '../../data-point-indoor-map.model';
 import { BsModalRef } from 'ngx-bootstrap/modal';
 import { Subject } from 'rxjs';
+import { pick } from 'lodash';
+
+interface Tab {
+  id: string;
+  label: string;
+  icon?: string;
+  active?: boolean;
+  disabled?: boolean;
+}
 
 @Component({
   selector: 'add-threshold-modal-dialog',
-  templateUrl: 'add-threshold-modal.component.html'
+  templateUrl: 'add-threshold-modal.component.html',
 })
 export class AddThresholdModalComponent implements OnInit {
-  @Input() threshold!: Threshold;
+  initialValue: Threshold = {
+    id: this.generateId().toString(),
+    type: 'measurement',
+    color: '#fb4b4b',
+    label: '',
+    min: 0,
+    max: 10,
+  };
+  @Input() threshold: Threshold = this.initialValue;
 
   public onSave$: Subject<Threshold> = new Subject<Threshold>();
-
   public onDelete$: Subject<Threshold> = new Subject<Threshold>();
 
-  formGroup!: FormGroup;
+  tabs: Tab[] = [
+    {
+      id: 'measurement',
+      label: 'Measurement',
+      icon: 'c8y-icon c8y-icon-aab-icon-template-model',
+      active: true,
+      disabled: false,
+    },
+    {
+      id: 'event',
+      label: 'Event',
+      icon: 'c8y-icon c8y-icon-data-points',
+      disabled: false,
+    },
+  ] as const;
 
-  color: string = '#ffffff';
-
-  constructor(private modalRef: BsModalRef, private formBuilder: FormBuilder) {}
+  constructor(private modalRef: BsModalRef) {}
 
   ngOnInit() {
-    this.initForm();
+    this.changeTab(this.threshold.type);
+  }
+
+  onTabClick(tabId: Tab['id'] | Threshold['type']) {
+    this.changeTab(tabId);
+    if (tabId === 'measurement') {
+      this.threshold = { ...pick(this.threshold, ['id', 'color', 'label']), type: 'measurement', min: 0, max: 0 };
+      this.initialValue = this.threshold;
+    } else if (tabId === 'event') {
+      this.threshold = { ...pick(this.threshold, ['id', 'color', 'label']), type: 'event', text: '' };
+      this.initialValue = this.threshold;
+    }
+  }
+
+  changeTab(tabId: Tab['id'] | Threshold['type']): void {
+    this.tabs.forEach((t) => {
+      t.active = t.id === tabId;
+    });
   }
 
   onCancelButtonClicked(): void {
@@ -56,47 +100,12 @@ export class AddThresholdModalComponent implements OnInit {
     this.hideDialog();
   }
 
-  private initForm(): void {
-    this.formGroup = this.formBuilder.group({
-      label: ['', Validators.required],
-      minimum: [, Validators.required],
-      maximum: [, Validators.required]
-    });
-
-    if (this.isThresholdConfigurationAvailable()) {
-      this.color = this.threshold.color;
-      this.formGroup.patchValue({
-        label: this.threshold.label,
-        minimum: this.threshold.min,
-        maximum: this.threshold.max
-      });
-    }
-  }
-
-  private getThresholdRepresentation(): Threshold {
-    return {
-      id: this.isThresholdConfigurationAvailable()
-        ? this.threshold.id
-        : this.generateId().toString(),
-      label: this.formGroup.value.label,
-      min: this.formGroup.value.minimum,
-      max: this.formGroup.value.maximum,
-      color: this.color
-    };
-  }
-
-  private isThresholdConfigurationAvailable(): boolean {
-    return !!this.threshold;
-  }
-
   private sendThreshold() {
-    const threshold = this.getThresholdRepresentation();
-    this.onSave$.next(threshold);
+    this.onSave$.next(this.threshold);
   }
 
   private sendDeleteThresholdEvent() {
-    const threshold = this.getThresholdRepresentation();
-    this.onDelete$.next(threshold);
+    this.onDelete$.next(this.threshold);
   }
 
   private hideDialog() {

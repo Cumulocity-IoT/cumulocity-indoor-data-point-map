@@ -19,8 +19,28 @@ import { MoveMarkerMapComponent } from './shared/components/move-marker-map/move
 import { DeviceSelectorModalComponent } from './shared/components/device-selector-modal/device-selector-modal.component';
 
 @NgModule({
-  declarations: [DataPointIndoorMapComponent, DataPointIndoorMapConfigComponent, AddThresholdModalComponent, ManagedDatapointsPopupModalComponent, MapConfigurationModalComponent, AssignDevicesStepComponent, AssignLocationsStepComponent],
-  imports: [CoreModule, CommonModule, FormsModule, TooltipModule, ColorPickerModule, ModalModule, DragDropModule, VirtualDraggableDeviceListComponent, ImageUploadComponent, MoveMarkerMapComponent, DeviceSelectorModalComponent],
+  declarations: [
+    DataPointIndoorMapComponent,
+    DataPointIndoorMapConfigComponent,
+    AddThresholdModalComponent,
+    ManagedDatapointsPopupModalComponent,
+    MapConfigurationModalComponent,
+    AssignDevicesStepComponent,
+    AssignLocationsStepComponent,
+  ],
+  imports: [
+    CoreModule,
+    CommonModule,
+    FormsModule,
+    TooltipModule,
+    ColorPickerModule,
+    ModalModule,
+    DragDropModule,
+    VirtualDraggableDeviceListComponent,
+    ImageUploadComponent,
+    MoveMarkerMapComponent,
+    DeviceSelectorModalComponent,
+  ],
   providers: [
     hookComponent({
       id: 'indoor-data-point-map-widget',

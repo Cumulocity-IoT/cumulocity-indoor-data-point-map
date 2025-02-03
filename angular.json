@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "cumulocity-indoor-datap-point-map": {
+    "cumulocity-indoor-data-point-map": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -24,7 +24,7 @@
         "build": {
           "builder": "@c8y/devkit:build",
           "options": {
-            "outputPath": "dist/cumulocity-indoor-datap-point-map",
+            "outputPath": "dist/cumulocity-indoor-data-point-map",
             "polyfills": [
               "zone.js"
             ],
@@ -80,10 +80,10 @@
           "builder": "@c8y/devkit:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "cumulocity-indoor-datap-point-map:build:production"
+              "buildTarget": "cumulocity-indoor-data-point-map:build:production"
             },
             "development": {
-              "buildTarget": "cumulocity-indoor-datap-point-map:build:development"
+              "buildTarget": "cumulocity-indoor-data-point-map:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -117,10 +117,10 @@
           "builder": "@c8y/devkit:deploy",
           "configurations": {
             "production": {
-              "buildTarget": "cumulocity-indoor-datap-point-map:build:production"
+              "buildTarget": "cumulocity-indoor-data-point-map:build:production"
             },
             "development": {
-              "buildTarget": "cumulocity-indoor-datap-point-map:build:development"
+              "buildTarget": "cumulocity-indoor-data-point-map:build:development"
             }
           },
           "defaultConfiguration": "production"

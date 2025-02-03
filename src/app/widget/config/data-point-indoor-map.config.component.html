@@ -1,4 +1,4 @@
-<div class="input-group m-b-32">
+<div class="input-group m-b-24">
   <c8y-form-group class="m-b-16">
     <label>Map Configuration</label>
     <div class="c8y-select-wrapper">
@@ -7,9 +7,13 @@
       </select>
     </div>
   </c8y-form-group>
-  <div class="input-group-btn m-t-16">
-    <button type="button" class="btn btn-dot text-primary" title="Create new configuration" aria-label="Create new configuration" (click)="onCreateNewMapConfiguration()"><i c8yIcon="plus-circle" class="c8y-icon"></i></button>
-    <button *ngIf="selectedMapConfigurationId" type="button" class="btn btn-dot" title="Edit configuration" aria-label="Edit configuration" (click)="onEditMapConfiguration()"><i c8yIcon="pencil" class="c8y-icon"></i></button>
+  <div class="input-group-btn m-t-24">
+    <button type="button" class="btn btn-dot text-primary" title="Create new configuration" aria-label="Create new configuration" (click)="onCreateNewMapConfiguration()">
+      <i c8yIcon="plus-circle" class="c8y-icon"></i>
+    </button>
+    <button *ngIf="selectedMapConfigurationId" type="button" class="btn btn-dot" title="Edit configuration" aria-label="Edit configuration" (click)="onEditMapConfiguration()">
+      <i c8yIcon="pencil" class="c8y-icon"></i>
+    </button>
     <button *ngIf="selectedMapConfigurationId" type="button" class="btn btn-dot btn-dot--danger" title="Delete configuration" aria-label="Delete configuration" (click)="onDeleteMapConfiguration()">
       <i c8yIcon="minus-circle" class="c8y-icon"></i>
     </button>
@@ -34,19 +38,28 @@
   <label>Title</label>
   <input type="text" class="form-control" placeholder="Title" [(ngModel)]="config.legend.title" />
 </c8y-form-group>
-<c8y-form-group>
-  <label>Thresholds</label>
-  <div style="margin: 10px 0px">
-    <button
-      *ngFor="let threshold of config.legend.thresholds"
-      type="button"
-      style="width: 50%; display: block; margin-bottom: 2px; margin-left: 0px !important"
-      class="btn"
-      [style.background]="threshold.color"
-      (click)="onThresholdClicked(threshold)"
-    >
-      {{ threshold.label + ' (min: ' + threshold.min + ', max: ' + threshold.max + ')' }}
-    </button>
+<c8y-form-group cdkDropList [cdkDropListData]="config.legend.thresholds" (cdkDropListDropped)="onDrop($event)">
+  <label>Marker Color Configuration</label>
+  <p class="small">In case of mixing event and measurement thresholds, the order of this list will be taken into account (first wins).</p>
+  <div class="threshold-list m-b-4">
+    <div *ngFor="let threshold of config.legend.thresholds" cdkDrag style="width: 50%" class="m-b-4 p-4 d-flex threshold-item" style="justify-content: space-between">
+      <div class="drag-handle m-4" cdkDragHandle>
+        <i c8yIcon="drag-reorder"></i>
+      </div>
+
+      <div class="threshold-text-item m-4" *ngIf="threshold.type === 'measurement'">
+        <i [style.background]="threshold.color" class="m-4"></i><span> {{ threshold.label + ' (min: ' + threshold.min + ', max: ' + threshold.max + ')' }}</span>
+      </div>
+      <div class="threshold-text-item m-4" *ngIf="threshold.type === 'event'">
+        <i [style.background]="threshold.color" class="m-4"></i><span> {{ threshold.label + ' (text: ' + threshold.text + ', type: ' + threshold.eventType + ')' }}</span>
+      </div>
+
+      <div class="input-group-btn">
+        <button type="button" title="Edit threshold" aria-label="Edit threshold" class="btn btn-dot" (click)="onThresholdClicked(threshold)">
+          <i c8yicon="pencil" class="c8y-icon dlt-c8y-icon-pencil"></i>
+        </button>
+      </div>
+    </div>
   </div>
   <button type="button" style="width: 50%" class="btn btn-default btn btn-block" (click)="onAddThresholdButtonClicked()">Add Threshold</button>
 </c8y-form-group>

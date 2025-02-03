@@ -25,11 +25,12 @@ import { ManagedDatapointsPopupModalComponent } from './managed-datapoints-popup
 import { isNil } from 'lodash';
 import { MapConfigurationModalComponent } from './map-config-modal/map-config-modal.component';
 import { Observable } from 'rxjs';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'data-point-indoor-map-configuration',
   templateUrl: './data-point-indoor-map.config.component.html',
-  styleUrls: ['../data-point-indoor-map.component.less'],
+  styleUrls: ['./data-point-indoor-map.config.component.less'],
   providers: [DataPointIndoorMapConfigService],
 })
 export class DataPointIndoorMapConfigComponent implements OnInit, OnBeforeSave {
@@ -71,6 +72,10 @@ export class DataPointIndoorMapConfigComponent implements OnInit, OnBeforeSave {
       this.selectedMapConfiguration = mapConfiguration;
       this.onMapConfigurationChanged();
     });
+  }
+
+  onDrop(event: CdkDragDrop<Threshold[]>) {
+    moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
   }
 
   onDeleteMapConfiguration(): void {
@@ -147,14 +152,8 @@ export class DataPointIndoorMapConfigComponent implements OnInit, OnBeforeSave {
   }
 
   private updateDataPointSeries(): void {
-    const deviceId: string = this.configService.getDeviceIdFromMapConfiguration(this.selectedMapConfiguration!);
-
-    if (!deviceId) {
-      this.alertService.warning('Could not load device configuration based on selected map configuration!');
-    }
-
-    this.configService.loadSupportedDataPointSeries(deviceId).then((dataPointSeries) => {
-      this.dataPointSeries = dataPointSeries;
+    this.configService.getSupportedSeriesFromMapConfiguration(this.selectedMapConfiguration!).then((datapoints) => {
+      this.dataPointSeries = datapoints;
       if (!this.config || !this.config.measurement) {
         return;
       }

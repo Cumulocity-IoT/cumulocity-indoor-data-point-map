@@ -17,7 +17,7 @@
  */
 import { Injectable } from '@angular/core';
 import { InventoryService } from '@c8y/client';
-import { has, get } from 'lodash';
+import { uniq } from 'lodash';
 import { isMapConfigutaration, MapConfiguration } from './data-point-indoor-map.model';
 import { AlertService, ModalService, Status } from '@c8y/ngx-components';
 
@@ -64,24 +64,24 @@ export class DataPointIndoorMapConfigService {
     });
   }
 
-  getDeviceIdFromMapConfiguration(mapConfiguration: object): string {
+  async getSupportedSeriesFromMapConfiguration(mapConfiguration: MapConfiguration): Promise<string[]> {
     if (!mapConfiguration) {
-      return '';
+      return [];
     }
 
-    if (!has(mapConfiguration, 'levels') || (get(mapConfiguration, 'levels') as object[]).length === 0) {
-      return '';
+    const uniqueDeviceIds = new Set<string>();
+    mapConfiguration.levels.forEach((l) => {
+      l.markers.forEach((id) => {
+        uniqueDeviceIds.add(id);
+      });
+    });
+    try {
+      const res = await Promise.all(Array.from(uniqueDeviceIds.values()).map((id) => this.inventoryService.getSupportedSeries(id)));
+      const datapoints = uniq(res.flat());
+      return datapoints;
+    } catch (e) {
+      console.error(e);
+      return [];
     }
-
-    const firstLevel = (get(mapConfiguration, 'levels') as object[])[0];
-    if (!has(firstLevel, 'markers') || (get(firstLevel, 'markers') as string[]).length === 0) {
-      return '';
-    }
-
-    return (get(firstLevel, 'markers') as string[])[0];
-  }
-
-  loadSupportedDataPointSeries(deviceId: string) {
-    return this.inventoryService.getSupportedSeries(deviceId).then();
   }
 }
